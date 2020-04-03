@@ -4,9 +4,11 @@
 #include <string>
 #include "json.hpp"
 #include "particle_filter.h"
+#include "spdlog/spdlog.h"
 
 // for convenience
 using nlohmann::json;
+using std::exception;
 using std::string;
 using std::vector;
 
@@ -36,20 +38,29 @@ int main() {
   double sigma_pos[3] = {0.3, 0.3, 0.01};
   // Landmark measurement uncertainty [x [m], y [m]]
   double sigma_landmark[2] = {0.3, 0.3};
+  // Console weight display
+  bool display_weights = false;
 
   // Read map data
   Map map;
+  // Map data safeguard
+  struct PFException : public exception {
+    const char *what() const throw() {
+      return "Unable to access open map file!";
+    }
+  };
+
   if (!read_map_data("../data/map_data.txt", map)) {
-    std::cout << "Error: Could not open map file" << std::endl;
-    return -1;
+    spdlog::error("Unable to access open map file!");
+    throw PFException();
   }
 
   // Create particle filter
   ParticleFilter pf;
 
-  h.onMessage([&pf, &map, &delta_t, &sensor_range, &sigma_pos, &sigma_landmark](
-                  uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
-                  uWS::OpCode opCode) {
+  h.onMessage([&pf, &map, &delta_t, &sensor_range, &sigma_pos, &sigma_landmark,
+               &display_weights](uWS::WebSocket<uWS::SERVER> ws, char *data,
+                                 size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -131,8 +142,11 @@ int main() {
             weight_sum += particles[i].weight;
           }
 
-          std::cout << "highest w " << highest_weight << std::endl;
-          std::cout << "average w " << weight_sum / num_particles << std::endl;
+          if (display_weights) {
+            std::cout << "highest w " << highest_weight << std::endl;
+            std::cout << "average w " << weight_sum / num_particles
+                      << std::endl;
+          }
 
           json msgJson;
           msgJson["best_particle_x"] = best_particle.x;
@@ -159,20 +173,20 @@ int main() {
   });  // end h.onMessage
 
   h.onConnection([&h](uWS::WebSocket<uWS::SERVER> ws, uWS::HttpRequest req) {
-    std::cout << "Connected!!!" << std::endl;
+    spdlog::info("Environment session connected!");
   });
 
   h.onDisconnection([&h](uWS::WebSocket<uWS::SERVER> ws, int code,
                          char *message, size_t length) {
     ws.close();
-    std::cout << "Disconnected" << std::endl;
+    spdlog::info("Disconnected from session");
   });
 
   int port = 4567;
   if (h.listen(port)) {
-    std::cout << "Listening to port " << port << std::endl;
+    spdlog::info("Listening to port {}", port);
   } else {
-    std::cerr << "Failed to listen to port" << std::endl;
+    spdlog::error("Failed to listen to port {}", port);
     return -1;
   }
 
