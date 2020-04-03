@@ -16,7 +16,7 @@
 #include <string>
 #include <vector>
 
-#include "helper_functions.h"
+#include "helpers.h"
 
 using std::cos;
 using std::sin;
@@ -94,17 +94,16 @@ void ParticleFilter::dataAssociation(vector<LandmarkObs> predicted,
    *   probably find it useful to implement this method and use it as a helper
    *   during the updateWeights phase.
    */
-  double dist2, min_dist2;
+  double dist2_, min_dist2;
   for (uint i = 0; i < observations.size(); i++) {
     min_dist2 = std::numeric_limits<double>::infinity();
     for (uint j = 0; j < predicted.size(); j++) {
       // No need to take the squared root as the order is the same
-      // TODO: move function to helper
-      dist2 = pow(observations[i].x - predicted[j].x, 2) +
-              pow(observations[i].y - predicted[j].y, 2);
+      dist2_ = dist2(observations[i].x, observations[i].y, predicted[j].x,
+                     predicted[j].y);
 
-      if (dist2 < min_dist2) {
-        min_dist2 = dist2;
+      if (dist2_ < min_dist2) {
+        min_dist2 = dist2_;
         observations[i].id = predicted[j].id;
       }
     }
@@ -127,7 +126,7 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
    *   and the following is a good resource for the actual equation to implement
    *   (look at equation 3.33) http://planning.cs.uiuc.edu/node99.html
    */
-  double dist2, sr2;
+  double dist2_, sr2;
   double varx = 2 * pow(std_landmark[0], 2);
   double vary = 2 * pow(std_landmark[1], 2);
   double normalization_term =
@@ -155,9 +154,10 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     // Keep only landmarks in sensor range of the current particle
     vector<LandmarkObs> observable_landmarks;
     for (uint j = 0; j < map_landmarks.landmark_list.size(); j++) {
-      dist2 = pow(particles[i].x - map_landmarks.landmark_list[j].x_f, 2) +
-              pow(particles[i].y - map_landmarks.landmark_list[j].y_f, 2);
-      if (dist2 <= sr2) {
+      dist2_ = dist2(particles[i].x, particles[i].y,
+                     map_landmarks.landmark_list[j].x_f,
+                     map_landmarks.landmark_list[j].y_f);
+      if (dist2_ <= sr2) {
         observable_landmarks.push_back(
             LandmarkObs{map_landmarks.landmark_list[j].id_i,
                         map_landmarks.landmark_list[j].x_f,

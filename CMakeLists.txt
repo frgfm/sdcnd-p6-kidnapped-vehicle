@@ -1,20 +1,28 @@
-project(PARTICLE_FILTER)
+cmake_minimum_required(VERSION 3.5)
 
-cmake_minimum_required (VERSION 3.5)
+project(ParticleFilter)
 
 add_definitions(-std=c++11)
 
 set(CXX_FLAGS "-Wall")
 set(CMAKE_CXX_FLAGS "${CXX_FLAGS}")
 
+
 include_directories(include)
+include_directories(lib)
+
+###############################################################################
+## Build project
+###############################################################################
 
 file(GLOB HEADERS src/*.h)
 file(GLOB HEADERS_HPP src/*.hpp)
 
-set(sources src/particle_filter.cpp src/main.cpp ${HEADERS} ${HEADERS_HPP})
-
-
+set(sources
+    src/particle_filter.cpp
+    src/main.cpp
+    ${HEADERS}
+    ${HEADERS_HPP})
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 
@@ -27,8 +35,17 @@ link_directories(/usr/local/Cellar/libuv/1*/lib)
 endif(${CMAKE_SYSTEM_NAME} MATCHES "Darwin") 
 
 
-add_executable(particle_filter ${sources})
+add_executable(ParticleFilter ${sources})
 
+target_link_libraries(ParticleFilter z ssl uv uWS)
 
-target_link_libraries(particle_filter z ssl uv uWS)
+###############################################################################
+## Testing with Catch2
+###############################################################################
 
+set(test_sources
+    test/main_test.cpp
+    test/helpers_test.cpp
+    src/helpers.h )
+
+add_executable(tests ${test_sources})

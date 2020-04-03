@@ -1,5 +1,5 @@
 /**
- * helper_functions.h
+ * helpers.h
  * Some helper functions for the 2D particle filter.
  *
  * Created on: Dec 13, 2016
@@ -55,10 +55,6 @@ struct LandmarkObs {
  */
 inline double dist2(double x1, double y1, double x2, double y2) {
   return pow(x2 - x1, 2) + pow(y2 - y1, 2);
-}
-
-inline double dist(double x1, double y1, double x2, double y2) {
-  return sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 }
 
 /**
